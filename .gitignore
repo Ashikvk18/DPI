@@ -1,0 +1,27 @@
+# Build artifacts
+*.exe
+*.o
+*.obj
+*.out
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+build/
+cmake-build-*/
+
+# Output files
+output.pcap
+output_test.pcap
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db

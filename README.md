@@ -1,183 +1,268 @@
-# DPI Engine - Deep Packet Inspection System
+<div align="center">
 
-
-This document explains **everything** about this project - from basic networking concepts to the complete code architecture. After reading this, you should understand exactly how packets flow through the system without needing to read the code.
-
----
-
-## Table of Contents
-
-1. [What is DPI?](#1-what-is-dpi)
-2. [Networking Background](#2-networking-background)
-3. [Project Overview](#3-project-overview)
-4. [File Structure](#4-file-structure)
-5. [The Journey of a Packet (Simple Version)](#5-the-journey-of-a-packet-simple-version)
-6. [The Journey of a Packet (Multi-threaded Version)](#6-the-journey-of-a-packet-multi-threaded-version)
-7. [Deep Dive: Each Component](#7-deep-dive-each-component)
-8. [How SNI Extraction Works](#8-how-sni-extraction-works)
-9. [How Blocking Works](#9-how-blocking-works)
-10. [Building and Running](#10-building-and-running)
-11. [Understanding the Output](#11-understanding-the-output)
-
----
-
-## 1. What is DPI?
-
-**Deep Packet Inspection (DPI)** is a technology used to examine the contents of network packets as they pass through a checkpoint. Unlike simple firewalls that only look at packet headers (source/destination IP), DPI looks *inside* the packet payload.
-
-### Real-World Uses:
-- **ISPs**: Throttle or block certain applications (e.g., BitTorrent)
-- **Enterprises**: Block social media on office networks
-- **Parental Controls**: Block inappropriate websites
-- **Security**: Detect malware or intrusion attempts
-
-### What Our DPI Engine Does:
 ```
-User Traffic (PCAP) → [DPI Engine] → Filtered Traffic (PCAP)
-                           ↓
-                    - Identifies apps (YouTube, Facebook, etc.)
-                    - Blocks based on rules
-                    - Generates reports
+██████╗ ██████╗ ██╗    ███████╗███╗   ██╗ ██████╗ ██╗███╗   ██╗███████╗
+██╔══██╗██╔══██╗██║    ██╔════╝████╗  ██║██╔════╝ ██║████╗  ██║██╔════╝
+██║  ██║██████╔╝██║    █████╗  ██╔██╗ ██║██║  ███╗██║██╔██╗ ██║█████╗  
+██║  ██║██╔═══╝ ██║    ██╔══╝  ██║╚██╗██║██║   ██║██║██║╚██╗██║██╔══╝  
+██████╔╝██║     ██║    ███████╗██║ ╚████║╚██████╔╝██║██║ ╚████║███████╗
+╚═════╝ ╚═╝     ╚═╝    ╚══════╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝╚═╝  ╚═══╝╚══════╝
 ```
 
+### Deep Packet Inspection System
+
+![Version](https://img.shields.io/badge/version-3.0-blue?style=for-the-badge)
+![C++](https://img.shields.io/badge/C++-17-00599C?style=for-the-badge&logo=cplusplus&logoColor=white)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey?style=for-the-badge)
+![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
+![No Dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen?style=for-the-badge)
+
+**Inspect. Classify. Block. Visualize.**
+
+A high-performance, multi-threaded deep packet inspection engine with a built-in web dashboard, real-time threat detection, bandwidth monitoring, and REST API — all in pure C++17 with **zero external dependencies**.
+
+[Get Started](#-quick-start) · [Features](#-feature-highlights) · [Dashboard](#-web-dashboard) · [Architecture](#-architecture) · [API Reference](#-rest-api)
+
+</div>
+
 ---
 
-## 2. Networking Background
+## ✨ Feature Highlights
 
-### The Network Stack (Layers)
+<table>
+<tr>
+<td width="50%">
+
+### 🔍 Deep Packet Inspection
+- TLS SNI extraction from HTTPS
+- HTTP Host header parsing
+- DNS query extraction
+- 20+ application signatures
+- Port-based fallback classification
+
+</td>
+<td width="50%">
+
+### 🛡️ Threat Detection
+- Port scan detection
+- DDoS / flood detection
+- SYN flood analysis
+- DNS tunneling / exfiltration alerts
+- Severity levels: LOW → CRITICAL
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 📊 Bandwidth Monitoring
+- Per-application data usage
+- Top talkers (heaviest IPs)
+- TCP vs UDP breakdown
+- Time-series traffic data
+- Average throughput & packet rate
+
+</td>
+<td width="50%">
+
+### 🌐 Web Dashboard
+- Real-time stats & charts
+- Interactive rule management
+- Connection table viewer
+- Threat alert feed
+- JSON / CSV export
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🚀 Quick Start
+
+```bash
+# 1. Build
+g++ -std=c++17 -I include -o dpi_dashboard.exe \
+    src/main_dashboard.cpp src/threat_detector.cpp \
+    src/bandwidth_monitor.cpp src/report_exporter.cpp \
+    src/web_server.cpp src/pcap_reader.cpp \
+    src/packet_parser.cpp src/sni_extractor.cpp \
+    src/types.cpp -lws2_32
+
+# 2. Run (dashboard opens at http://localhost:8080)
+./dpi_dashboard capture.pcap filtered.pcap
+
+# 3. Open your browser to http://localhost:8080
+```
+
+> 💡 **Tip:** Use `--no-dashboard` for CLI-only mode, or `--port 9090` for a custom port.
+
+---
+
+## 🎯 What is DPI?
+
+**Deep Packet Inspection (DPI)** examines the contents of network packets as they pass through a checkpoint. Unlike simple firewalls that only look at headers, DPI looks *inside* the payload.
+
+```
+                    ┌──────────────────────────────────┐
+                    │         🔍 DPI ENGINE             │
+                    │                                   │
+ 📥 Input PCAP ──► │  Parse → Classify → Block/Allow  │ ──► 📤 Filtered PCAP
+                    │                                   │
+                    │  + Threat Detection               │
+                    │  + Bandwidth Monitoring            │
+                    │  + Web Dashboard                   │
+                    └──────────────────────────────────┘
+```
+
+<details>
+<summary><b>🏢 Real-World Uses (click to expand)</b></summary>
+
+| Use Case | Description |
+|:---:|---|
+| 🌐 **ISPs** | Throttle or block applications (e.g., BitTorrent) |
+| 🏗️ **Enterprises** | Block social media on office networks |
+| 👨‍👩‍👧 **Parental Controls** | Block inappropriate websites |
+| 🔒 **Security** | Detect malware, intrusions, and data exfiltration |
+
+</details>
+
+---
+
+## 🧠 Networking Background
+
+<details>
+<summary><b>📶 The Network Stack (click to expand)</b></summary>
 
 When you visit a website, data travels through multiple "layers":
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│ Layer 7: Application    │ HTTP, TLS, DNS               │
-├─────────────────────────────────────────────────────────┤
-│ Layer 4: Transport      │ TCP (reliable), UDP (fast)   │
-├─────────────────────────────────────────────────────────┤
-│ Layer 3: Network        │ IP addresses (routing)       │
-├─────────────────────────────────────────────────────────┤
-│ Layer 2: Data Link      │ MAC addresses (local network)│
-└─────────────────────────────────────────────────────────┘
+  ┌──────────────────────────────────────────────────────────────┐
+  │  Layer 7: Application   │  HTTP, TLS, DNS                   │  ◄── DPI inspects here
+  ├──────────────────────────────────────────────────────────────┤
+  │  Layer 4: Transport     │  TCP (reliable), UDP (fast)       │  ◄── Ports, flags
+  ├──────────────────────────────────────────────────────────────┤
+  │  Layer 3: Network       │  IP addresses (routing)           │  ◄── Source/Dest IP
+  ├──────────────────────────────────────────────────────────────┤
+  │  Layer 2: Data Link     │  MAC addresses (local network)    │  ◄── Ethernet
+  └──────────────────────────────────────────────────────────────┘
 ```
 
-### A Packet's Structure
+</details>
 
-Every network packet is like a **Russian nesting doll** - headers wrapped inside headers:
+<details>
+<summary><b>📦 Packet Structure — Russian Nesting Doll (click to expand)</b></summary>
+
+Every network packet is headers wrapped inside headers:
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│ Ethernet Header (14 bytes)                                       │
-│ ┌──────────────────────────────────────────────────────────────┐ │
-│ │ IP Header (20 bytes)                                         │ │
-│ │ ┌──────────────────────────────────────────────────────────┐ │ │
-│ │ │ TCP Header (20 bytes)                                    │ │ │
-│ │ │ ┌──────────────────────────────────────────────────────┐ │ │ │
-│ │ │ │ Payload (Application Data)                           │ │ │ │
-│ │ │ │ e.g., TLS Client Hello with SNI                      │ │ │ │
-│ │ │ └──────────────────────────────────────────────────────┘ │ │ │
-│ │ └──────────────────────────────────────────────────────────┘ │ │
-│ └──────────────────────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────────────────────┘
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║  Ethernet Header (14 bytes)                                     ║
+  ║  ┌──────────────────────────────────────────────────────────┐   ║
+  ║  │  IP Header (20 bytes)                                    │   ║
+  ║  │  ┌──────────────────────────────────────────────────┐    │   ║
+  ║  │  │  TCP Header (20 bytes)                           │    │   ║
+  ║  │  │  ┌──────────────────────────────────────────┐    │    │   ║
+  ║  │  │  │  🔍 Payload (Application Data)           │    │    │   ║
+  ║  │  │  │  e.g., TLS Client Hello with SNI         │    │    │   ║
+  ║  │  │  └──────────────────────────────────────────┘    │    │   ║
+  ║  │  └──────────────────────────────────────────────────┘    │   ║
+  ║  └──────────────────────────────────────────────────────────┘   ║
+  ╚══════════════════════════════════════════════════════════════════╝
 ```
 
-### The Five-Tuple
+</details>
+
+### 🔗 The Five-Tuple
 
 A **connection** (or "flow") is uniquely identified by 5 values:
 
-| Field | Example | Purpose |
-|-------|---------|---------|
-| Source IP | 192.168.1.100 | Who is sending |
-| Destination IP | 172.217.14.206 | Where it's going |
-| Source Port | 54321 | Sender's application identifier |
-| Destination Port | 443 | Service being accessed (443 = HTTPS) |
-| Protocol | TCP (6) | TCP or UDP |
+| | Field | Example | Purpose |
+|:---:|:---|:---|:---|
+| 📤 | Source IP | `192.168.1.100` | Who is sending |
+| 📥 | Destination IP | `172.217.14.206` | Where it's going |
+| 🔢 | Source Port | `54321` | Sender's app identifier |
+| 🎯 | Destination Port | `443` | Service (443 = HTTPS) |
+| 📡 | Protocol | `TCP (6)` | TCP or UDP |
 
-**Why is this important?** 
-- All packets with the same 5-tuple belong to the same connection
-- If we block one packet of a connection, we should block all of them
-- This is how we "track" conversations between computers
+> All packets with the same 5-tuple belong to the **same connection**. This is how we track conversations between computers.
 
-### What is SNI?
+### 🔐 What is SNI?
 
-**Server Name Indication (SNI)** is part of the TLS/HTTPS handshake. When you visit `https://www.youtube.com`:
-
-1. Your browser sends a "Client Hello" message
-2. This message includes the domain name in **plaintext** (not encrypted yet!)
-3. The server uses this to know which certificate to send
+**Server Name Indication (SNI)** is the *key* to DPI. Even though HTTPS is encrypted, the domain name is visible in the **first packet**!
 
 ```
-TLS Client Hello:
-├── Version: TLS 1.2
-├── Random: [32 bytes]
-├── Cipher Suites: [list]
-└── Extensions:
-    └── SNI Extension:
-        └── Server Name: "www.youtube.com"  ← We extract THIS!
+  🖥️ Browser                                          🌐 Server
+     │                                                   │
+     │──── TLS Client Hello ────────────────────────────►│
+     │     ┌─────────────────────────────────────┐       │
+     │     │  Version: TLS 1.2                   │       │
+     │     │  Random: [32 bytes]                 │       │
+     │     │  Cipher Suites: [list]              │       │
+     │     │  Extensions:                        │       │
+     │     │    └─ SNI: "www.youtube.com" 🎯     │       │
+     │     └─────────────────────────────────────┘       │
+     │                                                   │
+     │◄═══ 🔒 Encrypted from here on ═══════════════════│
 ```
-
-**This is the key to DPI**: Even though HTTPS is encrypted, the domain name is visible in the first packet!
 
 ---
 
-## 3. Project Overview
+## 🏗️ Architecture
 
-### What This Project Does
+### Three Versions
 
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│ Wireshark   │     │ DPI Engine  │     │ Output      │
-│ Capture     │ ──► │             │ ──► │ PCAP        │
-│ (input.pcap)│     │ - Parse     │     │ (filtered)  │
-└─────────────┘     │ - Classify  │     └─────────────┘
-                    │ - Block     │
-                    │ - Report    │
-                    └─────────────┘
-```
+| | Version | File | Best For |
+|:---:|:---|:---|:---|
+| 📝 | Simple (Single-threaded) | `main_working.cpp` | Learning, small captures |
+| ⚡ | Multi-threaded | `dpi_mt.cpp` | Performance, large captures |
+| 🌐 | **Dashboard (v3.0)** | **`main_dashboard.cpp`** | **Full-featured with Web UI** |
 
-### Two Versions
-
-| Version | File | Use Case |
-|---------|------|----------|
-| Simple (Single-threaded) | `src/main_working.cpp` | Learning, small captures |
-| Multi-threaded | `src/dpi_mt.cpp` | Production, large captures |
-
----
-
-## 4. File Structure
+### 📁 Project Structure
 
 ```
 packet_analyzer/
-├── include/                    # Header files (declarations)
-│   ├── pcap_reader.h          # PCAP file reading
-│   ├── packet_parser.h        # Network protocol parsing
-│   ├── sni_extractor.h        # TLS/HTTP inspection
-│   ├── types.h                # Data structures (FiveTuple, AppType, etc.)
-│   ├── rule_manager.h         # Blocking rules (multi-threaded version)
-│   ├── connection_tracker.h   # Flow tracking (multi-threaded version)
-│   ├── load_balancer.h        # LB thread (multi-threaded version)
-│   ├── fast_path.h            # FP thread (multi-threaded version)
-│   ├── thread_safe_queue.h    # Thread-safe queue
-│   └── dpi_engine.h           # Main orchestrator
 │
-├── src/                        # Implementation files
-│   ├── pcap_reader.cpp        # PCAP file handling
-│   ├── packet_parser.cpp      # Protocol parsing
-│   ├── sni_extractor.cpp      # SNI/Host extraction
-│   ├── types.cpp              # Helper functions
-│   ├── main_working.cpp       # ★ SIMPLE VERSION ★
-│   ├── dpi_mt.cpp             # ★ MULTI-THREADED VERSION ★
-│   └── [other files]          # Supporting code
+├── 📂 include/                         ── Header Files ──
+│   ├── pcap_reader.h                   PCAP file reading
+│   ├── packet_parser.h                 Network protocol parsing
+│   ├── sni_extractor.h                 TLS / HTTP / DNS inspection
+│   ├── types.h                         Core data structures
+│   ├── rule_manager.h                  Blocking rules engine
+│   ├── connection_tracker.h            Flow tracking
+│   ├── load_balancer.h                 Load balancer thread
+│   ├── fast_path.h                     Fast path processor thread
+│   ├── thread_safe_queue.h             Lock-free queue
+│   ├── dpi_engine.h                    Multi-threaded orchestrator
+│   ├── 🆕 threat_detector.h            Anomaly & threat detection
+│   ├── 🆕 bandwidth_monitor.h          Per-app bandwidth tracking
+│   ├── 🆕 report_exporter.h            JSON / CSV export
+│   └── 🆕 web_server.h                 Embedded HTTP server
 │
-├── generate_test_pcap.py      # Creates test data
-├── test_dpi.pcap              # Sample capture with various traffic
-└── README.md                  # This file!
+├── 📂 src/                             ── Source Files ──
+│   ├── pcap_reader.cpp                 PCAP file handling
+│   ├── packet_parser.cpp               Protocol parsing
+│   ├── sni_extractor.cpp               SNI / Host extraction
+│   ├── types.cpp                       Helper functions
+│   ├── main_working.cpp                ★ Simple version
+│   ├── dpi_mt.cpp                      ★ Multi-threaded version
+│   ├── 🆕 main_dashboard.cpp           ★ v3.0 Dashboard version
+│   ├── 🆕 threat_detector.cpp          Threat detection logic
+│   ├── 🆕 bandwidth_monitor.cpp        Bandwidth tracking logic
+│   ├── 🆕 report_exporter.cpp          JSON / CSV serialization
+│   └── 🆕 web_server.cpp               HTTP server + embedded HTML
+│
+├── generate_test_pcap.py               Creates test data
+├── test_dpi.pcap                       Sample capture file
+├── CMakeLists.txt                      Build configuration
+└── README.md                           You are here!
 ```
 
 ---
 
-## 5. The Journey of a Packet (Simple Version)
+## 🔄 The Journey of a Packet (Simple Version)
 
-Let's trace a single packet through `main_working.cpp`:
+> 🗺️ Let's trace a single packet through `main_working.cpp`
 
 ### Step 1: Read PCAP File
 
@@ -390,46 +475,40 @@ for (const auto& [tuple, flow] : flows) {
 
 ---
 
-## 6. The Journey of a Packet (Multi-threaded Version)
+## ⚡ The Journey of a Packet (Multi-threaded Version)
 
-The multi-threaded version (`dpi_mt.cpp`) adds **parallelism** for high performance:
+The multi-threaded version (`dpi_mt.cpp`) adds **parallelism** for high performance.
 
 ### Architecture Overview
 
 ```
-                    ┌─────────────────┐
-                    │  Reader Thread  │
-                    │  (reads PCAP)   │
-                    └────────┬────────┘
-                             │
-              ┌──────────────┴──────────────┐
-              │      hash(5-tuple) % 2      │
-              ▼                             ▼
-    ┌─────────────────┐           ┌─────────────────┐
-    │  LB0 Thread     │           │  LB1 Thread     │
-    │  (Load Balancer)│           │  (Load Balancer)│
-    └────────┬────────┘           └────────┬────────┘
-             │                             │
-      ┌──────┴──────┐               ┌──────┴──────┐
-      │hash % 2     │               │hash % 2     │
-      ▼             ▼               ▼             ▼
-┌──────────┐ ┌──────────┐   ┌──────────┐ ┌──────────┐
-│FP0 Thread│ │FP1 Thread│   │FP2 Thread│ │FP3 Thread│
-│(Fast Path)│ │(Fast Path)│   │(Fast Path)│ │(Fast Path)│
-└─────┬────┘ └─────┬────┘   └─────┬────┘ └─────┬────┘
-      │            │              │            │
-      └────────────┴──────────────┴────────────┘
-                          │
-                          ▼
-              ┌───────────────────────┐
-              │   Output Queue        │
-              └───────────┬───────────┘
-                          │
-                          ▼
-              ┌───────────────────────┐
-              │  Output Writer Thread │
-              │  (writes to PCAP)     │
-              └───────────────────────┘
+                         ┌─────────────────────┐
+                         │  📖 Reader Thread    │
+                         │  (reads PCAP file)   │
+                         └──────────┬───────────┘
+                                    │
+                    ┌───────────────┴───────────────┐
+                    │      hash(5-tuple) % 2        │
+                    ▼                               ▼
+          ┌──────────────────┐            ┌──────────────────┐
+          │  ⚖️ LB0 Thread    │            │  ⚖️ LB1 Thread    │
+          │  (Load Balancer) │            │  (Load Balancer) │
+          └────────┬─────────┘            └────────┬─────────┘
+                   │                               │
+            ┌──────┴──────┐                 ┌──────┴──────┐
+            ▼             ▼                 ▼             ▼
+      ┌──────────┐ ┌──────────┐      ┌──────────┐ ┌──────────┐
+      │🔍 FP0    │ │🔍 FP1    │      │🔍 FP2    │ │🔍 FP3    │
+      │Fast Path │ │Fast Path │      │Fast Path │ │Fast Path │
+      └────┬─────┘ └────┬─────┘      └────┬─────┘ └────┬─────┘
+           │             │                 │             │
+           └─────────────┴─────────────────┴─────────────┘
+                                 │
+                                 ▼
+                   ┌──────────────────────────┐
+                   │  📤 Output Writer Thread  │
+                   │  (writes filtered PCAP)   │
+                   └──────────────────────────┘
 ```
 
 ### Why This Design?
@@ -560,7 +639,7 @@ class TSQueue {
 
 ---
 
-## 7. Deep Dive: Each Component
+## 🔬 Deep Dive: Each Component
 
 ### pcap_reader.h / pcap_reader.cpp
 
@@ -689,7 +768,7 @@ AppType sniToAppType(const std::string& sni) {
 
 ---
 
-## 8. How SNI Extraction Works
+## 🔐 How SNI Extraction Works
 
 ### The TLS Handshake
 
@@ -803,38 +882,39 @@ std::optional<std::string> SNIExtractor::extract(
 
 ---
 
-## 9. How Blocking Works
+## 🚫 How Blocking Works
 
 ### Rule Types
 
-| Rule Type | Example | What it Blocks |
-|-----------|---------|----------------|
-| IP | `192.168.1.50` | All traffic from this source |
-| App | `YouTube` | All YouTube connections |
-| Domain | `tiktok` | Any SNI containing "tiktok" |
+| | Rule Type | Example | What it Blocks |
+|:---:|:---|:---|:---|
+| 🌐 | IP | `192.168.1.50` | All traffic from this source |
+| 📱 | App | `YouTube` | All YouTube connections |
+| 🔗 | Domain | `tiktok` | Any SNI containing "tiktok" |
+| 🔌 | Port | `8080` | All traffic to this port |
 
 ### The Blocking Flow
 
 ```
-Packet arrives
-      │
-      ▼
-┌─────────────────────────────────┐
-│ Is source IP in blocked list?  │──Yes──► DROP
-└───────────────┬─────────────────┘
-                │No
-                ▼
-┌─────────────────────────────────┐
-│ Is app type in blocked list?   │──Yes──► DROP
-└───────────────┬─────────────────┘
-                │No
-                ▼
-┌─────────────────────────────────┐
-│ Does SNI match blocked domain? │──Yes──► DROP
-└───────────────┬─────────────────┘
-                │No
-                ▼
-            FORWARD
+  📥 Packet arrives
+        │
+        ▼
+  ┌─────────────────────────────────────┐
+  │  🌐 Is source IP in blocked list?  │──Yes──► ❌ DROP
+  └─────────────────┬───────────────────┘
+                    │ No
+                    ▼
+  ┌─────────────────────────────────────┐
+  │  📱 Is app type in blocked list?   │──Yes──► ❌ DROP
+  └─────────────────┬───────────────────┘
+                    │ No
+                    ▼
+  ┌─────────────────────────────────────┐
+  │  🔗 Does SNI match blocked domain? │──Yes──► ❌ DROP
+  └─────────────────┬───────────────────┘
+                    │ No
+                    ▼
+               ✅ FORWARD
 ```
 
 ### Flow-Based Blocking
@@ -862,68 +942,94 @@ Connection to YouTube:
 
 ---
 
-## 10. Building and Running
+## 🔨 Building and Running
 
 ### Prerequisites
 
-- **macOS/Linux** with C++17 compiler
-- **g++** or **clang++**
-- No external libraries needed!
+| | Requirement | Notes |
+|:---:|:---|:---|
+| 💻 | C++17 compiler | g++, clang++, or MSVC |
+| 🪟 | Windows | MSYS2/MinGW recommended |
+| 🐧 | Linux / macOS | Any modern g++ or clang++ |
+| 📦 | Dependencies | **None!** Zero external libs |
 
 ### Build Commands
 
-**Simple Version:**
+<details>
+<summary><b>📝 Simple Version</b></summary>
+
 ```bash
 g++ -std=c++17 -O2 -I include -o dpi_simple \
-    src/main_working.cpp \
-    src/pcap_reader.cpp \
-    src/packet_parser.cpp \
-    src/sni_extractor.cpp \
-    src/types.cpp
+    src/main_working.cpp src/pcap_reader.cpp \
+    src/packet_parser.cpp src/sni_extractor.cpp src/types.cpp
 ```
+</details>
 
-**Multi-threaded Version:**
+<details>
+<summary><b>⚡ Multi-threaded Version</b></summary>
+
 ```bash
 g++ -std=c++17 -pthread -O2 -I include -o dpi_engine \
-    src/dpi_mt.cpp \
-    src/pcap_reader.cpp \
-    src/packet_parser.cpp \
-    src/sni_extractor.cpp \
-    src/types.cpp
+    src/dpi_mt.cpp src/pcap_reader.cpp \
+    src/packet_parser.cpp src/sni_extractor.cpp src/types.cpp
 ```
+</details>
+
+<details open>
+<summary><b>🌐 Dashboard Version (v3.0) — Recommended</b></summary>
+
+```bash
+# Windows (MSYS2):
+g++ -std=c++17 -I include -o dpi_dashboard.exe \
+    src/main_dashboard.cpp src/threat_detector.cpp \
+    src/bandwidth_monitor.cpp src/report_exporter.cpp \
+    src/web_server.cpp src/pcap_reader.cpp \
+    src/packet_parser.cpp src/sni_extractor.cpp \
+    src/types.cpp -lws2_32
+
+# Linux / macOS:
+g++ -std=c++17 -pthread -I include -o dpi_dashboard \
+    src/main_dashboard.cpp src/threat_detector.cpp \
+    src/bandwidth_monitor.cpp src/report_exporter.cpp \
+    src/web_server.cpp src/pcap_reader.cpp \
+    src/packet_parser.cpp src/sni_extractor.cpp \
+    src/types.cpp
+
+# Or using CMake:
+cmake -S . -B build && cmake --build build
+```
+</details>
 
 ### Running
 
-**Basic usage:**
 ```bash
-./dpi_engine test_dpi.pcap output.pcap
-```
+# 🌐 With web dashboard (recommended):
+./dpi_dashboard capture.pcap filtered.pcap
 
-**With blocking:**
-```bash
-./dpi_engine test_dpi.pcap output.pcap \
-    --block-app YouTube \
-    --block-app TikTok \
-    --block-ip 192.168.1.50 \
-    --block-domain facebook
-```
+# 🎯 With blocking rules:
+./dpi_dashboard capture.pcap filtered.pcap \
+    --block-app YouTube --block-app TikTok \
+    --block-ip 192.168.1.50 --block-domain facebook
 
-**Configure threads (multi-threaded only):**
-```bash
+# 🔌 Custom dashboard port:
+./dpi_dashboard capture.pcap filtered.pcap --port 9090
+
+# 🖥️ CLI only (no web dashboard):
+./dpi_dashboard capture.pcap filtered.pcap --no-dashboard
+
+# ⚡ Multi-threaded version with custom threads:
 ./dpi_engine input.pcap output.pcap --lbs 4 --fps 4
-# Creates 4 LB threads × 4 FP threads = 16 processing threads
 ```
 
 ### Creating Test Data
 
 ```bash
-python3 generate_test_pcap.py
-# Creates test_dpi.pcap with sample traffic
+python3 generate_test_pcap.py    # Creates test_dpi.pcap
 ```
 
 ---
 
-## 11. Understanding the Output
+## 📺 Understanding the Output
 
 ### Sample Output
 
@@ -992,62 +1098,166 @@ python3 generate_test_pcap.py
 
 ---
 
-## 12. Extending the Project
+## 💡 Extending the Project
 
-### Ideas for Improvement
+<details>
+<summary><b>🧩 Ideas for Future Improvement (click to expand)</b></summary>
 
-1. **Add More App Signatures**
-   ```cpp
-   // In types.cpp
-   if (sni.find("twitch") != std::string::npos)
-       return AppType::TWITCH;
-   ```
+| | Feature | Difficulty |
+|:---:|:---|:---:|
+| 🎮 | Add more app signatures (Twitch, Reddit, LinkedIn) | Easy |
+| 🐌 | Bandwidth throttling (delay instead of drop) | Medium |
+| 📡 | QUIC / HTTP3 support (UDP port 443) | Hard |
+| 🌍 | GeoIP lookup for destination countries | Medium |
+| 🧬 | Regex-based payload pattern matching | Medium |
+| 📱 | Live packet capture from network interfaces | Hard |
 
-2. **Add Bandwidth Throttling**
-   ```cpp
-   // Instead of DROP, delay packets
-   if (shouldThrottle(flow)) {
-       std::this_thread::sleep_for(10ms);
-   }
-   ```
-
-3. **Add Live Statistics Dashboard**
-   ```cpp
-   // Separate thread printing stats every second
-   void statsThread() {
-       while (running) {
-           printStats();
-           sleep(1);
-       }
-   }
-   ```
-
-4. **Add QUIC/HTTP3 Support**
-   - QUIC uses UDP on port 443
-   - SNI is in the Initial packet (encrypted differently)
-
-5. **Add Persistent Rules**
-   - Save rules to file
-   - Load on startup
+</details>
 
 ---
 
-## Summary
+## 🌐 Web Dashboard
 
-This DPI engine demonstrates:
+<div align="center">
 
-1. **Network Protocol Parsing** - Understanding packet structure
-2. **Deep Packet Inspection** - Looking inside encrypted connections
-3. **Flow Tracking** - Managing stateful connections
-4. **Multi-threaded Architecture** - Scaling with thread pools
-5. **Producer-Consumer Pattern** - Thread-safe queues
+> **The dashboard is served directly from the C++ binary — zero external dependencies.**
+> Open `http://localhost:8080` after running the engine.
 
-The key insight is that even HTTPS traffic leaks the destination domain in the TLS handshake, allowing network operators to identify and control application usage.
+</div>
+
+### Dashboard Tabs
+
+| Tab | Description |
+|:---:|:---|
+| 📊 **Overview** | Live packet counts, app distribution bar chart, protocol donut chart, network stats |
+| 📈 **Bandwidth** | Per-application data usage table, TCP/UDP breakdown, top talkers by bytes |
+| 🛡️ **Threats** | Security alert cards with severity badges, threat type counters |
+| 🔗 **Connections** | Live connection table — state, app type, SNI/domain, bytes per flow |
+| 🚫 **Rules** | Add/remove blocking rules for IPs, apps, and domains with one click |
+| 💾 **Export** | Download JSON or CSV reports |
+
+> The dashboard **auto-refreshes every 3 seconds**. After PCAP processing finishes, the server stays running so you can explore the results interactively. Press Enter to exit.
 
 ---
 
-## Questions?
+## 🛡️ Threat Detection
 
-If you have questions about any part of this project, the code is well-commented and follows the same flow described in this document. Start with the simple version (`main_working.cpp`) to understand the concepts, then move to the multi-threaded version (`dpi_mt.cpp`) to see how parallelism is added.
+The `ThreatDetector` module analyzes **every packet** in real-time:
 
-Happy learning! 🚀
+```
+  ┌────────────────────────────────────────────────────────────────┐
+  │                    🛡️ THREAT DETECTION ENGINE                   │
+  ├─────────────────┬──────────────────────────────────────────────┤
+  │  🔍 Port Scan   │  15+ distinct ports from one IP in 10s      │
+  ├─────────────────┼──────────────────────────────────────────────┤
+  │  🌊 DDoS Flood  │  500+ packets/sec from one IP               │
+  ├─────────────────┼──────────────────────────────────────────────┤
+  │  ⚡ SYN Flood   │  100+ SYNs with few ACKs (incomplete TCP)   │
+  ├─────────────────┼──────────────────────────────────────────────┤
+  │  🕳️ DNS Tunnel  │  DNS queries with names >60 chars long      │
+  └─────────────────┴──────────────────────────────────────────────┘
+```
+
+**Severity Levels:**
+
+> 🟦 `LOW` → 🟨 `MEDIUM` → 🟧 `HIGH` → 🟥 `CRITICAL`
+
+---
+
+## 📊 Bandwidth Monitor
+
+```
+  ┌─────────────────────────────────────────┐
+  │         📊 BANDWIDTH MONITOR            │
+  │                                         │
+  │  📱 Per-App Usage                       │
+  │     YouTube ████████████░░  45.2 MB     │
+  │     Netflix ██████░░░░░░░  22.1 MB     │
+  │     Google  ███░░░░░░░░░░   8.4 MB     │
+  │                                         │
+  │  👤 Top Talkers (by IP)                 │
+  │  📡 Protocol Split (TCP / UDP / Other)  │
+  │  📈 Time-Series (bytes/sec over time)   │
+  │  ⏱️ Duration, Avg Throughput, Avg PPS   │
+  └─────────────────────────────────────────┘
+```
+
+---
+
+## 🔌 REST API
+
+The embedded server exposes a full REST API for programmatic access:
+
+<details>
+<summary><b>📖 GET Endpoints (click to expand)</b></summary>
+
+| Endpoint | Returns |
+|:---|:---|
+| `GET /api/stats` | Overall stats + bandwidth + protocols |
+| `GET /api/threats` | All threat alerts + threat stats |
+| `GET /api/connections` | Active connections list |
+| `GET /api/bandwidth` | Per-app bandwidth breakdown |
+| `GET /api/timeseries` | Time-series traffic data |
+| `GET /api/rules` | Current blocking rules |
+| `GET /api/top-talkers` | Top bandwidth consumers |
+| `GET /api/export/json` | Full JSON report download |
+| `GET /api/export/csv` | CSV connections download |
+
+</details>
+
+<details>
+<summary><b>✏️ POST Endpoints (click to expand)</b></summary>
+
+| Endpoint | Body | Action |
+|:---|:---|:---|
+| `POST /api/rules/block-ip` | `{"ip": "192.168.1.50"}` | Block an IP |
+| `POST /api/rules/unblock-ip` | `{"ip": "192.168.1.50"}` | Unblock an IP |
+| `POST /api/rules/block-app` | `{"app": "YouTube"}` | Block an app |
+| `POST /api/rules/unblock-app` | `{"app": "YouTube"}` | Unblock an app |
+| `POST /api/rules/block-domain` | `{"domain": "*.tiktok.com"}` | Block a domain |
+| `POST /api/rules/unblock-domain` | `{"domain": "*.tiktok.com"}` | Unblock a domain |
+
+</details>
+
+---
+
+## 🧬 Summary
+
+<div align="center">
+
+| | Capability | Module |
+|:---:|:---|:---|
+| 🔍 | **Deep Packet Inspection** | SNI, HTTP Host, DNS extraction |
+| 📡 | **Protocol Parsing** | Ethernet → IP → TCP/UDP → Payload |
+| 🔗 | **Flow Tracking** | Five-tuple based stateful connections |
+| ⚡ | **Multi-threaded Pipeline** | LB → FP thread pool architecture |
+| 🛡️ | **Threat Detection** | Port scan, DDoS, SYN flood, DNS tunnel |
+| 📊 | **Bandwidth Monitoring** | Per-app, per-IP, protocol distribution |
+| 🌐 | **Web Dashboard** | Embedded HTTP server with live UI |
+| 🔌 | **REST API** | Full programmatic access to all data |
+| 💾 | **Report Export** | JSON and CSV downloads |
+| 🚫 | **Rule Engine** | Block by IP, app, domain, or port |
+
+</div>
+
+> 💡 **The key insight:** Even HTTPS traffic leaks the destination domain in the TLS handshake (SNI), allowing network operators to identify and control application usage without breaking encryption.
+
+---
+
+<div align="center">
+
+### 📚 Learning Path
+
+```
+main_working.cpp          →     dpi_mt.cpp          →     main_dashboard.cpp
+   (simple)                   (multi-threaded)             (full-featured v3.0)
+   Learn the basics           Add parallelism              Web UI + Threats + BW
+```
+
+**Start simple. Scale up. Ship with style.**
+
+---
+
+Made with ❤️ and C++17
+
+</div>
