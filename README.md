@@ -23,7 +23,7 @@ A high-performance, multi-threaded deep packet inspection engine with a built-in
 
 ![DPI Dashboard](dpi-thumbnail.png)
 
-[Get Started](#-quick-start) · [Features](#-feature-highlights) · [Dashboard](#-web-dashboard) · [Architecture](#-architecture) · [API Reference](#-rest-api)
+[**🔴 Live Demo**](https://dpi-dashboard.onrender.com) · [Get Started](#-quick-start) · [Features](#-feature-highlights) · [Dashboard](#-web-dashboard) · [Architecture](#-architecture) · [API Reference](#-rest-api)
 
 </div>
 
@@ -95,6 +95,7 @@ g++ -std=c++17 -I include -o dpi_dashboard.exe \
 ./dpi_dashboard capture.pcap filtered.pcap
 
 # 3. Open your browser to http://localhost:8080
+# Or try the live demo: https://dpi-dashboard.onrender.com
 ```
 
 > 💡 **Tip:** Use `--no-dashboard` for CLI-only mode, or `--port 9090` for a custom port.
@@ -1123,7 +1124,7 @@ python3 generate_test_pcap.py    # Creates test_dpi.pcap
 <div align="center">
 
 > **The dashboard is served directly from the C++ binary — zero external dependencies.**
-> Open `http://localhost:8080` after running the engine.
+> Open `http://localhost:8080` after running the engine, or try the [**Live Demo**](https://dpi-dashboard.onrender.com).
 
 </div>
 
