@@ -9,6 +9,14 @@
 #include <thread>
 #include <chrono>
 
+#ifdef _WIN32
+#include <io.h>
+#define IS_TTY() _isatty(_fileno(stdin))
+#else
+#include <unistd.h>
+#define IS_TTY() isatty(STDIN_FILENO)
+#endif
+
 #include "pcap_reader.h"
 #include "packet_parser.h"
 #include "sni_extractor.h"
@@ -483,8 +491,16 @@ int main(int argc, char* argv[]) {
     // --- Keep web server running if dashboard is active ---
     if (web_server && web_server->isRunning()) {
         std::cout << "\n  Web Dashboard is running at http://localhost:" << web_port << "\n";
-        std::cout << "  Press Enter to stop the server and exit...\n";
-        std::cin.get();
+        if (IS_TTY()) {
+            std::cout << "  Press Enter to stop the server and exit...\n";
+            std::cin.get();
+        } else {
+            // Running in non-interactive mode (e.g. Docker) — block until server stops
+            std::cout << "  Running in daemon mode...\n";
+            while (web_server->isRunning()) {
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
+        }
         web_server->stop();
     }
 
