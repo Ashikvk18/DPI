@@ -1,0 +1,7 @@
+services:
+  dpi-dashboard:
+    build: .
+    container_name: dpi-dashboard
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

@@ -21,6 +21,8 @@
 
 A high-performance, multi-threaded deep packet inspection engine with a built-in web dashboard, real-time threat detection, bandwidth monitoring, and REST API — all in pure C++17 with **zero external dependencies**.
 
+![DPI Dashboard](dpi-thumbnail.png)
+
 [Get Started](#-quick-start) · [Features](#-feature-highlights) · [Dashboard](#-web-dashboard) · [Architecture](#-architecture) · [API Reference](#-rest-api)
 
 </div>
