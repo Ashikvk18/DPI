@@ -24,9 +24,7 @@ WORKDIR /app
 
 COPY --from=builder /app/build/dpi_dashboard /app/dpi_dashboard
 COPY test_dpi.pcap /app/test_dpi.pcap
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
 
 EXPOSE 10000
 
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/bin/sh", "-c", "/app/dpi_dashboard test_dpi.pcap output.pcap --port ${PORT:-10000}"]
